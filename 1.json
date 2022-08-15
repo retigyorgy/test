@@ -1,0 +1,414 @@
+{
+    "$id": "https://example.com/geographical-location.schema.json",
+    "$schema": "http://json-schema.org/schema",
+    "type": "object",
+    "properties": {
+        "data": {
+            "description": "The request payload",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "title": "Name",
+                    "description": "The name of the Upload Definition.",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                },
+                "fileset": {
+                    "title": "Fileset",
+                    "description": "Fileset rules",
+                    "type": "object",
+                    "properties": {
+                        "source": {
+                            "title": "Source",
+                            "description": "Source of the files",
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "title": "Type",
+                                    "description": "Type of the file transfer method.",
+                                    "type": "string",
+                                    "enum": [
+                                        "MINIO",
+                                        "FTP"
+                                    ],
+                                    "examples": [
+                                        "FTP"
+                                    ]
+                                },
+                                "url": {
+                                    "title": "URL",
+                                    "description": "FTP Address of the files",
+                                    "type": "string",
+                                    "examples": [
+                                        "ftp://user:password@host:port/path"
+                                    ]
+                                },
+                                "minioBucket": {
+                                    "title": "Bucket",
+                                    "description": "S3 bucket name",
+                                    "type": "string",
+                                    "examples": [
+                                        "giro"
+                                    ]
+                                },
+                                "ftpMode": {
+                                    "title": "FTP mode",
+                                    "description": "FTP mode",
+                                    "type": "string",
+                                    "enum": [
+                                        "ACTIVE",
+                                        "PASSIVE"
+                                    ],
+                                    "examples": [
+                                        "ACTIVE"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "type",
+                                "url"
+                            ],
+                            "anyOf": [
+                                {
+                                    "properties": {
+                                        "type": {
+                                            "const": "MINIO"
+                                        }
+                                    },
+                                    "required": [
+                                        "minioBucket"
+                                    ]
+                                },
+                                {
+                                    "properties": {
+                                        "type": {
+                                            "const": "FTP"
+                                        }
+                                    },
+                                    "required": [
+                                        "ftpMode"
+                                    ]
+                                }
+                            ],
+                            "additionalProperties": false
+                        },
+                        "include": {
+                            "title": "Included files",
+                            "description": "Pattern matching on included file names.",
+                            "type": "array",
+                            "examples": [
+                                [
+                                    "giro.csv",
+                                    "giro-2022-*.csv",
+                                    "giro/**.csv"
+                                ]
+                            ],
+                            "items": {
+                                "type": "string"
+                            },
+                            "minItems": 1
+                        },
+                        "exclude": {
+                            "title": "Excluded filed",
+                            "description": "Pattern matching on excluded file names.",
+                            "type": [
+                                "array",
+                                "null"
+                            ],
+                            "examples": [
+                                [
+                                    "giro/2021/03/22.csv",
+                                    "giro/2022/**.csv"
+                                ]
+                            ],
+                            "items": {
+                                "type": "string"
+                            },
+                            "minItems": 1
+                        },
+                        "includeCondition": {
+                            "title": "Include condition",
+                            "description": "Included files whose creation time matches the rule.",
+                            "type": "object",
+                            "properties": {
+                                "operator": {
+                                    "title": "Operator",
+                                    "description": "Operator",
+                                    "type": "string",
+                                    "enum": [
+                                        "<",
+                                        ">",
+                                        ">=",
+                                        "<=",
+                                        "="
+                                    ],
+                                    "examples": [
+                                        ">="
+                                    ]
+                                },
+                                "timestamp": {
+                                    "title": "Creating Time",
+                                    "description": "Creating time of the included files",
+                                    "type": "string",
+                                    "pattern": "^[0-9]{4}-[0-1][0-9]-[0-1][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\\.[0-9]{3}\\+[0-2][0-9]:[0-5][0-9]$",
+                                    "examples": [
+                                        "2022-02-01T12:49:24.919+02:00"
+                                    ]
+                                },
+                                "referenceFile": {
+                                    "title": "Reference File",
+                                    "description": "I don't know what is this...",
+                                    "type": "string",
+                                    "examples": [
+                                        "???"
+                                    ]
+                                }
+                            },
+                            "oneOf": [
+                                {
+                                    "required": [
+                                        "timestamp"
+                                    ]
+                                },
+                                {
+                                    "required": [
+                                        "referenceFile"
+                                    ]
+                                }
+                            ],
+                            "additionalProperties": false
+                        }
+                    },
+                    "required": [
+                        "source",
+                        "include"
+                    ]
+                },
+                "trigger": {
+                    "title": "Trigger",
+                    "description": "How to start a job process",
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "title": "Trigger type",
+                            "description": "Type of the trigger.",
+                            "type": "string",
+                            "enum": [
+                                "REPEAT"
+                            ],
+                            "examples": [
+                                "REPEAT"
+                            ]
+                        },
+                        "repeatDefinition": {
+                            "title": "Repeat definition",
+                            "description": "How to repeat the job.",
+                            "type": "object",
+                            "properties": {
+                                "year": {
+                                    "title": "Year",
+                                    "description": "Repeated year",
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ],
+                                    "minimum": 2000,
+                                    "maximum": 2100
+                                },
+                                "month": {
+                                    "title": "Month",
+                                    "description": "Repeated month",
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ],
+                                    "minimum": 1,
+                                    "maximum": 12
+                                },
+                                "day": {
+                                    "title": "Day",
+                                    "description": "Repeated day",
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ],
+                                    "minimum": 1,
+                                    "maximum": 31
+                                },
+                                "hour": {
+                                    "title": "Hour",
+                                    "description": "Repeated hour",
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 23
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": []
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": []
+                },
+                "notifications": {
+                    "title": "Notification List",
+                    "description": "List of notifications.",
+                    "type": "array",
+                    "items": {
+                        "title": "Notification",
+                        "description": "How to send notification if sonething happen.",
+                        "type": "object",
+                        "properties": {
+                            "level": {
+                                "$ref": "#/$defs/notificationLevel"
+                            },
+                            "type": {
+                                "$ref": "#/$defs/notificationType"
+                            }
+                        },
+                        "allOf": [
+                            {
+                                "if": {
+                                    "properties": {
+                                        "type": {
+                                            "const": "EMAIL"
+                                        }
+                                    }
+                                },
+                                "then": {
+                                    "properties": {
+                                        "level": {
+                                            "$ref": "#/$defs/notificationLevel"
+                                        },
+                                        "type": {
+                                            "$ref": "#/$defs/notificationType"
+                                        },
+                                        "emailAddresses": {
+                                            "title": "Email Addresses",
+                                            "description": "List of email addresses where to send notification emails",
+                                            "type": "array",
+                                            "items": {
+                                                "title": "Email Address",
+                                                "description": "Where to send the notification email",
+                                                "type": "string"
+                                            },
+                                            "minItems": 1
+                                        }
+                                    },
+                                    "required": [
+                                        "emailAddresses"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            {
+                                "if": {
+                                    "properties": {
+                                        "type": {
+                                            "const": "KAFKA"
+                                        }
+                                    }
+                                },
+                                "then": {
+                                    "properties": {
+                                        "level": {
+                                            "$ref": "#/$defs/notificationLevel"
+                                        },
+                                        "type": {
+                                            "$ref": "#/$defs/notificationType"
+                                        },
+                                        "topic": {
+                                            "title": "Kafka Topic",
+                                            "description": "Which kafka topic will be waiting the notification message",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "topic"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        ],
+                        "additionalProperties": true,
+                        "required": [
+                            "level",
+                            "type"
+                        ]
+                    }
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "name",
+                "fileset",
+                "trigger"
+            ]
+        },
+        "meta": {
+            "description": "Object with the meta data of the incoming request",
+            "type": "object",
+            "properties": {
+                "groupId": {
+                    "description": "???",
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "number"
+                        }
+                    ]
+                },
+                "userId": {
+                    "description": "???",
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "number"
+                        }
+                    ]
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "groupId",
+                "userId"
+            ]
+        }
+    },
+    "additionalProperties": false,
+    "required": [
+        "data",
+        "meta"
+    ],
+    "$defs": {
+        "notificationLevel": {
+            "title": "Level list",
+            "description": "List of the levels when notification will be sent.",
+            "type": "array",
+            "items": {
+                "title": "Level",
+                "description": "Type of the level.",
+                "type": "string",
+                "enum": [
+                    "SUCCESS",
+                    "WARNING",
+                    "ERROR"
+                ]
+            }
+        },
+        "notificationType": {
+            "title": "Type",
+            "description": "Type of the channel to send notification.",
+            "type": "string",
+            "enum": [
+                "EMAIL",
+                "KAFKA"
+            ]
+        }
+    }
+}
